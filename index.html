@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Secure Auth Module</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  /* ── Design: Industrial terminal aesthetic — dark steel, amber accents ── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:       #0a0c0f;
+    --panel:    #111418;
+    --border:   #1e2530;
+    --amber:    #f5a623;
+    --amber2:   #ff6b35;
+    --green:    #39d353;
+    --red:      #e84855;
+    --text:     #c8d0dc;
+    --dim:      #5a6478;
+    --mono:     'Share Tech Mono', monospace;
+    --ui:       'Rajdhani', sans-serif;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--ui);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    /* Subtle grid texture */
+    background-image:
+      linear-gradient(rgba(30,37,48,.6) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(30,37,48,.6) 1px, transparent 1px);
+    background-size: 32px 32px;
+  }
+
+  /* ── Header ── */
+  header {
+    text-align: center;
+    margin-bottom: 2.5rem;
+  }
+  .logo-line {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: .75rem;
+    margin-bottom: .4rem;
+  }
+  .logo-icon {
+    width: 36px; height: 36px;
+    fill: var(--amber);
+    animation: pulse 2.8s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%,100% { opacity: 1; }
+    50%      { opacity: .55; }
+  }
+  h1 {
+    font-family: var(--ui);
+    font-size: 1.9rem;
+    font-weight: 700;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: #fff;
+  }
+  .subtitle {
+    font-family: var(--mono);
+    font-size: .72rem;
+    color: var(--dim);
+    letter-spacing: .18em;
+    text-transform: uppercase;
+  }
+
+  /* ── Panel ── */
+  .panel {
+    width: 100%;
+    max-width: 440px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-top: 2px solid var(--amber);
+    border-radius: 4px;
+    overflow: hidden;
+    box-shadow: 0 0 40px rgba(245,166,35,.06), 0 8px 32px rgba(0,0,0,.6);
+  }
+
+  .panel-header {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    padding: .9rem 1.4rem;
+    border-bottom: 1px solid var(--border);
+    background: rgba(245,166,35,.04);
+  }
+  .dot { width:8px; height:8px; border-radius:50%; }
+  .dot-r { background: var(--red); }
+  .dot-y { background: var(--amber); }
+  .dot-g { background: var(--green); }
+  .panel-title {
+    font-family: var(--mono);
+    font-size: .7rem;
+    color: var(--dim);
+    letter-spacing: .15em;
+    margin-left: auto;
+    text-transform: uppercase;
+  }
+
+  .panel-body { padding: 2rem 1.8rem; }
+
+  /* ── Form fields ── */
+  .field { margin-bottom: 1.4rem; }
+  label {
+    display: block;
+    font-size: .7rem;
+    font-weight: 600;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    color: var(--dim);
+    margin-bottom: .5rem;
+  }
+  input {
+    width: 100%;
+    background: #0d1117;
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: .7rem 1rem;
+    font-family: var(--mono);
+    font-size: .92rem;
+    color: var(--text);
+    outline: none;
+    transition: border-color .2s, box-shadow .2s;
+  }
+  input:focus {
+    border-color: var(--amber);
+    box-shadow: 0 0 0 2px rgba(245,166,35,.12);
+  }
+  input::placeholder { color: #2e3848; }
+
+  /* ── Buttons ── */
+  .btn {
+    width: 100%;
+    padding: .8rem;
+    background: var(--amber);
+    color: #0a0c0f;
+    font-family: var(--ui);
+    font-size: .95rem;
+    font-weight: 700;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: background .2s, transform .1s, opacity .2s;
+    margin-top: .4rem;
+  }
+  .btn:hover  { background: #ffc04d; }
+  .btn:active { transform: scale(.98); }
+  .btn:disabled { opacity: .4; cursor: not-allowed; }
+
+  /* ── Status message ── */
+  #status {
+    margin-top: 1.2rem;
+    padding: .8rem 1rem;
+    border-radius: 3px;
+    font-family: var(--mono);
+    font-size: .82rem;
+    line-height: 1.5;
+    display: none;
+    white-space: pre-wrap;
+    border-left: 3px solid var(--dim);
+  }
+  #status.info    { border-color: var(--amber); background: rgba(245,166,35,.07); color: var(--amber); }
+  #status.success { border-color: var(--green); background: rgba(57,211,83,.07);  color: var(--green); }
+  #status.error   { border-color: var(--red);   background: rgba(232,72,85,.07);  color: var(--red); }
+
+  /* ── OTP step ── */
+  #otp-section { display: none; }
+
+  .otp-hint {
+    font-family: var(--mono);
+    font-size: .78rem;
+    color: var(--dim);
+    margin-bottom: 1.2rem;
+    padding: .65rem .9rem;
+    background: rgba(245,166,35,.05);
+    border: 1px dashed rgba(245,166,35,.25);
+    border-radius: 3px;
+  }
+  .otp-hint span {
+    font-size: 1.4rem;
+    color: var(--amber);
+    letter-spacing: .3em;
+    display: block;
+    margin-top: .3rem;
+  }
+
+  /* ── Loader ── */
+  .loader {
+    display: inline-block;
+    width: 12px; height: 12px;
+    border: 2px solid rgba(245,166,35,.3);
+    border-top-color: var(--amber);
+    border-radius: 50%;
+    animation: spin .7s linear infinite;
+    vertical-align: middle;
+    margin-right: .5rem;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── Footer ── */
+  footer {
+    margin-top: 2rem;
+    font-family: var(--mono);
+    font-size: .65rem;
+    color: #2e3848;
+    letter-spacing: .12em;
+    text-align: center;
+  }
+
+  /* ── Step indicator ── */
+  .steps {
+    display: flex;
+    gap: 0;
+    margin-bottom: 1.8rem;
+  }
+  .step {
+    flex: 1;
+    text-align: center;
+    font-size: .65rem;
+    font-weight: 600;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    padding: .4rem;
+    color: var(--dim);
+    border-bottom: 2px solid var(--border);
+    transition: all .3s;
+  }
+  .step.active { color: var(--amber); border-color: var(--amber); }
+  .step.done   { color: var(--green); border-color: var(--green); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo-line">
+    <!-- Shield SVG icon -->
+    <svg class="logo-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <path d="M12 1L3 5v6c0 5.25 3.75 10.15 9 11.35C17.25 21.15 21 16.25 21 11V5l-9-4z"/>
+    </svg>
+    <h1>SecureAuth</h1>
+  </div>
+  <p class="subtitle">OS Authentication Module &nbsp;·&nbsp; C++17 / OpenSSL</p>
+</header>
+
+<div class="panel">
+  <div class="panel-header">
+    <span class="dot dot-r"></span>
+    <span class="dot dot-y"></span>
+    <span class="dot dot-g"></span>
+    <span class="panel-title">auth_terminal v2.0</span>
+  </div>
+
+  <div class="panel-body">
+    <div class="steps">
+      <div class="step active" id="step1">01 · Credentials</div>
+      <div class="step" id="step2">02 · MFA / OTP</div>
+      <div class="step" id="step3">03 · Session</div>
+    </div>
+
+    <!-- Step 1: Username + Password -->
+    <div id="login-section">
+      <div class="field">
+        <label>Username</label>
+        <input id="username" type="text" placeholder="admin" maxlength="50" autocomplete="off" />
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input id="password" type="password" placeholder="••••••••••••" maxlength="128" />
+      </div>
+      <div style="display: flex; gap: 10px;">
+        <button class="btn" id="login-btn" onclick="doLogin()">Login</button>
+        <button class="btn" id="register-btn" onclick="doRegister()" style="background: var(--dim); color: #fff;">Register</button>
+      </div>
+    </div>
+
+    <!-- Registration QR Section -->
+    <div id="qr-section" style="display: none; text-align: center;">
+      <h3 style="margin-bottom: 1rem; color: var(--amber);">Scan with Google Authenticator</h3>
+      <img id="qr-image" src="" alt="QR Code" style="margin-bottom: 1rem; border: 2px solid var(--amber); border-radius: 4px; max-width: 200px; height: auto;" />
+      <p style="font-size: 0.8rem; color: var(--dim); margin-bottom: 1rem;">Scan the code, then enter the 6-digit PIN to verify setup.</p>
+      
+      <div class="field" style="max-width: 160px; margin: 0 auto 1.4rem;">
+        <input id="setup-otp" type="text" placeholder="000000" maxlength="6" 
+               style="text-align: center; font-size: 1.2rem; letter-spacing: 0.2em;" />
+      </div>
+      
+      <button class="btn" id="verify-setup-btn" onclick="doVerifySetup()">Complete Setup</button>
+      <button class="btn" onclick="showLogin()" style="background: transparent; color: var(--dim); border: 1px solid var(--border); margin-top: 10px;">Back to Login</button>
+    </div>
+
+    <!-- Step 2: OTP -->
+    <div id="otp-section">
+      <div class="otp-hint">
+        Enter code from Google Authenticator
+      </div>
+      <div class="field">
+        <label>One-Time Password</label>
+        <input id="otp" type="text" placeholder="000000" maxlength="10"
+               inputmode="numeric" pattern="[0-9]*" autocomplete="off" />
+      </div>
+      <button class="btn" id="otp-btn" onclick="doVerifyOTP()">Verify OTP</button>
+    </div>
+
+    <div id="status"></div>
+  </div>
+</div>
+
+<footer>PBKDF2-SHA256 · TOTP RFC 6238 · RBAC · Audit Logging · IP Rate Limiting</footer>
+
+<script>
+  let currentUser = "";
+
+  function setStatus(msg, type = "info") {
+    const el = document.getElementById("status");
+    el.textContent = msg;
+    el.className = type;
+    el.style.display = "block";
+  }
+
+  function setLoading(btnId, loading) {
+    const btn = document.getElementById(btnId);
+    if (!btn) return;
+    btn.disabled = loading;
+    if (loading) {
+      btn.innerHTML = '<span class="loader"></span> Processing...';
+    } else {
+      if (btnId === "login-btn") btn.innerHTML = "Login";
+      else if (btnId === "register-btn") btn.innerHTML = "Register";
+      else if (btnId === "verify-setup-btn") btn.innerHTML = "Complete Setup";
+      else btn.innerHTML = "Verify OTP";
+    }
+  }
+
+  function showLogin() {
+    document.getElementById("qr-section").style.display = "none";
+    document.getElementById("login-section").style.display = "block";
+    setStatus("Please login with your new credentials.", "info");
+  }
+
+  async function doRegister() {
+    const username = document.getElementById("username").value.trim();
+    const password = document.getElementById("password").value;
+
+    if (!username || !password) {
+      setStatus("Username and password are required.", "error");
+      return;
+    }
+
+    setLoading("register-btn", true);
+    setStatus("Registering user...", "info");
+
+    try {
+      const res  = await fetch("/api/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password })
+      });
+      const data = await res.json();
+
+      if (data.status === "success") {
+        currentUser = username; // Store for verification step
+        document.getElementById("login-section").style.display = "none";
+        document.getElementById("qr-section").style.display = "block";
+        document.getElementById("qr-image").src = data.qr_code;
+        document.getElementById("setup-otp").value = "";
+        setStatus("Registration successful. Please scan the QR code and verify below.", "success");
+      } else {
+        setStatus(data.message || "Registration failed.", "error");
+      }
+    } catch (e) {
+      setStatus("Network error: " + e.message, "error");
+    } finally {
+      setLoading("register-btn", false);
+    }
+  }
+
+  async function doVerifySetup() {
+    const otp = document.getElementById("setup-otp").value.trim();
+    if (!otp) { setStatus("Please enter the 6-digit code from your app.", "error"); return; }
+
+    setLoading("verify-setup-btn", true);
+    setStatus("Verifying your MFA setup...", "info");
+
+    try {
+      const res  = await fetch("/api/verify-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: currentUser, otp })
+      });
+      const data = await res.json();
+
+      if (data.status === "success") {
+        setStatus("✓ " + data.message + "\n\nRedirection to login in 3s...", "success");
+        setTimeout(showLogin, 3000);
+      } else {
+        setStatus(data.message || "OTP verification failed.", "error");
+      }
+    } catch (e) {
+      setStatus("Network error: " + e.message, "error");
+    } finally {
+      setLoading("verify-setup-btn", false);
+    }
+  }
+
+  function goToStep(n) {
+    for (let i = 1; i <= 3; i++) {
+      const s = document.getElementById("step" + i);
+      s.className = "step" + (i < n ? " done" : i === n ? " active" : "");
+    }
+  }
+
+  async function doLogin() {
+    const username = document.getElementById("username").value.trim();
+    const password = document.getElementById("password").value;
+
+    if (!username || !password) {
+      setStatus("Username and password are required.", "error");
+      return;
+    }
+
+    setLoading("login-btn", true);
+    setStatus("Contacting authentication server...", "info");
+
+    try {
+      const res  = await fetch("/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password })
+      });
+      const data = await res.json();
+
+      if (data.status === "otp_required") {
+        currentUser = username;
+        // Show OTP section
+        document.getElementById("login-section").style.display = "none";
+        document.getElementById("otp-section").style.display  = "block";
+        document.getElementById("otp").value = "";
+        document.getElementById("otp").focus();
+        goToStep(2);
+        setStatus("Primary credentials verified.\nEnter the Google Authenticator code.", "info");
+      } else {
+        setStatus(data.message || "Authentication failed.", "error");
+      }
+    } catch (e) {
+      setStatus("Network error: " + e.message, "error");
+    } finally {
+      setLoading("login-btn", false);
+    }
+  }
+
+  async function doVerifyOTP() {
+    const otp = document.getElementById("otp").value.trim();
+    if (!otp) { setStatus("Please enter the OTP.", "error"); return; }
+
+    setLoading("otp-btn", true);
+    setStatus("Verifying OTP...", "info");
+
+    try {
+      const res  = await fetch("/api/verify-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: currentUser, otp })
+      });
+      const data = await res.json();
+
+      if (data.status === "success") {
+        goToStep(3);
+        setStatus("✓ " + data.message + "\n\nSession token generated. You are now authenticated.", "success");
+        document.getElementById("otp-section").style.display = "none";
+      } else {
+        setStatus(data.message || "OTP verification failed.", "error");
+      }
+    } catch (e) {
+      setStatus("Network error: " + e.message, "error");
+    } finally {
+      setLoading("otp-btn", false);
+    }
+  }
+
+  // Enter key support
+  document.addEventListener("keydown", e => {
+    if (e.key !== "Enter") return;
+    if (document.getElementById("otp-section").style.display === "block") doVerifyOTP();
+    else doLogin();
+  });
+</script>
+</body>
+</html>
